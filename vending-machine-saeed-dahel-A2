@@ -1,0 +1,108 @@
+# This function shows the available items from the vending machine along with their codes, prices, and stock levels in a well-organised table layout in a structured welcome message.
+
+def display_welcome_message():
+    """Display the welcome message and available items."""
+    print("\nWelcome to Dahels Vending Machine!")
+    print("=" * 50)
+    print("{:<8} {:<25} {:<10} {:<10}".format("Code", "Items", "Price", "Stock"))
+    print("-" * 50)
+    for code, item in items.items():
+        print("[{:<6}] {:<25} AED {:<7} {:<10}".format(
+            code, item['name'], item['price'], item['stock']))
+    print("=" * 50)
+    
+# Using item codes, this function generates and returns a dictionary with the names, prices, and stock levels of every item found in vending machines.
+
+def initialize_items():
+    """Initialize the vending machine items with their properties."""
+    return {
+        1: {"name": "Lipton Peach Ice Tea", "price": 3, "stock": 5},
+        2: {"name": "Coke Zero", "price": 3, "stock": 5},
+        3: {"name": "Pringles", "price": 6, "stock": 5},
+        4: {"name": "Mars", "price": 4, "stock": 5},
+        5: {"name": "Fanta", "price": 2, "stock": 5},
+        6: {"name": "My Dubai Water", "price": 1, "stock": 8}
+    }
+# This function displays an error message for invalid inputs and keeps asking the user for input until they enter a valid value of the specified type (integer by default).
+
+def get_valid_input(prompt, input_type=int):
+    """Get and validate user input with error handling."""
+    while True:
+        try:
+            return input_type(input(prompt))
+        except ValueError:
+            print("Invalid input. Please try again.")
+
+# Until the user enters a valid positive number amount for the chosen item, this function manages the payment process by repeatedly asking them to insert money.
+def process_payment(item_name, price):
+    """Handle the payment process for an item."""
+    print(f"\nYou chose {item_name}. Please insert AED {price:.2f}.")
+    while True:
+        try:
+            money_inserted = float(input("Amount inserted: AED "))
+            if money_inserted < 0:
+                print("Please enter a positive amount.")
+                continue
+            return money_inserted
+        except ValueError:
+            print("Invalid amount. Please enter a numeric value.")
+
+# If the chosen item is not available, this function displays an out-of-stock message and comes back False.
+def purchase_item(item_code):
+    """Process the purchase of an item."""
+    item = items[item_code]
+    
+    if item['stock'] <= 0:
+        print(f"Sorry, {item['name']} is out of stock.")
+        return False
+    
+# In order to process the payment, this code first determines whether the money entered covers the item's price. If it does, it dispenses the item and change; if not, it cancels the transaction and updates the stock properly
+    money_inserted = process_payment(item['name'], item['price'])
+    
+
+    if money_inserted >= item['price']:
+        item['stock'] -= 1
+        print(f"\nHere is your {item['name']}. Enjoy!")
+        if money_inserted > item['price']:
+            change = money_inserted - item['price']
+            print(f"Here is your change: AED {change:.2f}")
+        return True
+    else:
+        print("Insufficient funds. Transaction cancelled.")
+        return False
+
+#The main vending machine program loop is executed by this function, which displays items, verifies user input for item selection (1-6), or exits (0), and then either handles the selection or ends the program.
+def main():
+    """Main program loop."""
+    global items
+    items = initialize_items()
+    
+    while True:
+        display_welcome_message()
+        
+        while True:
+            item_code = get_valid_input("\nPlease enter an item code (1-6) or 0 to exit: ")
+            if item_code == 0:
+                print("\nThank you for using Dahels Vending Machine! Goodbye and a Great Day!")
+                return
+            if item_code in items:
+                break
+            print("Invalid code. Please enter a number between 1 and 6.")
+        
+        # it initiates the purchase procedure for the chosen item.
+        purchase_item(item_code)
+        
+        # Until the user answers "yes" (continuing) or "no" (leaving with a farewell message), this loop keeps asking if they want to make another purchase.
+        while True:
+            again = input("\nWould you like to buy another item? (yes/no): ").strip().lower()
+            if again in ('yes', 'no'):
+                break
+            print("Please enter 'yes' or 'no'.")
+        
+        if again == 'no':
+            print("\nThank you for using Dahels Vending Machine! Goodbye!")
+            break
+
+#By using the main() function to launch the vending machine program, it guarantees that it only executes when executed directly (not when imported).
+if __name__ == "__main__":
+    main()

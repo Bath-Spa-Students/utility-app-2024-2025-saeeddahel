@@ -93,6 +93,7 @@ def purchase_item(item_code, remaining_change=0):
         print("Transaction cancelled.")
         return False, remaining_change
 
+#This code creates and shows a formatted receipt with the item you bought, the price, any change you received, and a thank-you note.
 def generate_receipt(item_name, price, change):
     """Generate and display a receipt for the purchase."""
     print("\n" + "=" * 30)
@@ -105,7 +106,7 @@ def generate_receipt(item_name, price, change):
     print("=" * 30)
     print("Thank you for your purchase!")
     print("=" * 30 + "\n")
-
+#This part of the code prints the pairing recommendation and makes a complementary item recommendation based on the code of the purchased item.
 def suggest_pairing(item_code):
     """Suggest a complementary item based on the purchased item."""
     pairing_suggestions = {

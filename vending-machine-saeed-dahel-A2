@@ -23,6 +23,7 @@ def initialize_items():
         5: {"name": "Fanta", "price": 2, "stock": 5},
         6: {"name": "My Dubai Water", "price": 1, "stock": 8}
     }
+
 # This function displays an error message for invalid inputs and keeps asking the user for input until they enter a valid value of the specified type (integer by default).
 
 def get_valid_input(prompt, input_type=int):
@@ -34,48 +35,96 @@ def get_valid_input(prompt, input_type=int):
             print("Invalid input. Please try again.")
 
 # Until the user enters a valid positive number amount for the chosen item, this function manages the payment process by repeatedly asking them to insert money.
-def process_payment(item_name, price):
+def process_payment(item_name, price, remaining_change=0):
     """Handle the payment process for an item."""
     print(f"\nYou chose {item_name}. Please insert AED {price:.2f}.")
+    use_change = 'no'  # Initialize with default value
+    if remaining_change > 0:
+        print(f"You have AED {remaining_change:.2f} remaining from previous purchase.")
+        use_change = input(f"Would you like to use your AED {remaining_change:.2f} towards this purchase? (yes/no): ").strip().lower()
+        if use_change == 'yes':
+            additional_needed = max(0, price - remaining_change)
+            if additional_needed == 0:
+                return remaining_change - price
+            print(f"After using your change, you need to insert AED {additional_needed:.2f} more.")
+        else:
+            additional_needed = price
+    else:
+        additional_needed = price
+    
     while True:
         try:
-            money_inserted = float(input("Amount inserted: AED "))
+            money_inserted = float(input(f"Amount inserted: AED "))
             if money_inserted < 0:
                 print("Please enter a positive amount.")
                 continue
-            return money_inserted
+            total_inserted = (remaining_change if use_change == 'yes' else 0) + money_inserted
+            if total_inserted >= price:
+                return total_inserted - price  # Return the change
+            else:
+                print(f"Insufficient amount. You still need AED {price - total_inserted:.2f} more.")
         except ValueError:
             print("Invalid amount. Please enter a numeric value.")
-
 # If the chosen item is not available, this function displays an out-of-stock message and comes back False.
-def purchase_item(item_code):
+def purchase_item(item_code, remaining_change=0):
     """Process the purchase of an item."""
     item = items[item_code]
     
     if item['stock'] <= 0:
         print(f"Sorry, {item['name']} is out of stock.")
-        return False
+        return False, remaining_change
     
-# In order to process the payment, this code first determines whether the money entered covers the item's price. If it does, it dispenses the item and change; if not, it cancels the transaction and updates the stock properly
-    money_inserted = process_payment(item['name'], item['price'])
+    change = process_payment(item['name'], item['price'], remaining_change)
     
-
-    if money_inserted >= item['price']:
+    if change is not None:  # Only if payment was successful
         item['stock'] -= 1
         print(f"\nHere is your {item['name']}. Enjoy!")
-        if money_inserted > item['price']:
-            change = money_inserted - item['price']
+        if change > 0:
             print(f"Here is your change: AED {change:.2f}")
-        return True
+        
+        # Generate a receipt
+        generate_receipt(item['name'], item['price'], change)
+        
+        # Suggest a pairing of items
+        suggest_pairing(item_code)
+        
+        return True, change
     else:
-        print("Insufficient funds. Transaction cancelled.")
-        return False
+        print("Transaction cancelled.")
+        return False, remaining_change
+
+def generate_receipt(item_name, price, change):
+    """Generate and display a receipt for the purchase."""
+    print("\n" + "=" * 30)
+    print("       RECEIPT")
+    print("=" * 30)
+    print(f"Item: {item_name}")
+    print(f"Price: AED {price:.2f}")
+    if change > 0:
+        print(f"Change: AED {change:.2f}")
+    print("=" * 30)
+    print("Thank you for your purchase!")
+    print("=" * 30 + "\n")
+
+def suggest_pairing(item_code):
+    """Suggest a complementary item based on the purchased item."""
+    pairing_suggestions = {
+        1: "How about some Pringles (Code 3) to go with your Lipton Peach Ice Tea?",
+        2: "A Mars bar (Code 4) would go great with your Coke Zero!",
+        3: "Thirsty? Try a Coke Zero (Code 2) with your Pringles!",
+        4: "A cold Coke Zero (Code 2) pairs perfectly with a Mars bar!",
+        5: "Sweeten your Fanta experience with a Mars bar (Code 4)!",
+        6: "Stay hydrated! My Dubai Water is perfect on its own!"
+    }
+    suggestion = pairing_suggestions.get(item_code, "Enjoy your purchase!")
+    print("\nSuggested pairing: " + suggestion)
 
 #The main vending machine program loop is executed by this function, which displays items, verifies user input for item selection (1-6), or exits (0), and then either handles the selection or ends the program.
 def main():
     """Main program loop."""
     global items
     items = initialize_items()
+    remaining_change = 0
     
     while True:
         display_welcome_message()
@@ -83,6 +132,8 @@ def main():
         while True:
             item_code = get_valid_input("\nPlease enter an item code (1-6) or 0 to exit: ")
             if item_code == 0:
+                if remaining_change > 0:
+                    print(f"\nDon't forget your remaining change: AED {remaining_change:.2f}")
                 print("\nThank you for using Dahels Vending Machine! Goodbye and a Great Day!")
                 return
             if item_code in items:
@@ -90,7 +141,7 @@ def main():
             print("Invalid code. Please enter a number between 1 and 6.")
         
         # it initiates the purchase procedure for the chosen item.
-        purchase_item(item_code)
+        success, remaining_change = purchase_item(item_code, remaining_change)
         
         # Until the user answers "yes" (continuing) or "no" (leaving with a farewell message), this loop keeps asking if they want to make another purchase.
         while True:
@@ -100,6 +151,8 @@ def main():
             print("Please enter 'yes' or 'no'.")
         
         if again == 'no':
+            if remaining_change > 0:
+                print(f"\nDon't forget your remaining change: AED {remaining_change:.2f}")
             print("\nThank you for using Dahels Vending Machine! Goodbye!")
             break
 
